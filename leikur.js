@@ -1,5 +1,11 @@
+const FPS = 60;
+
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
+let yes = new Skip(30,50,"lime");
+
+document.addEventListener("keydown",keyDown);
+document.addEventListener("keyup",keyUp);
 
 function Asteroid(x,y,velX,velY,color,size) {
     this.x = x;
@@ -10,46 +16,71 @@ function Asteroid(x,y,velX,velY,color,size) {
     this.size = size;
 }
 
-Asteroid.prototype.draw = function() {
-    ctx.moveTo(this.x,this.y);
-    ctx.fillStyle = this.color;
-    ctx.lineTo(this.x+1.7*this.size,this.y+0.5*this.size);
-    ctx.lineTo(this.x+2.4*this.size,this.y+1.5*this.size);
-    ctx.lineTo(this.x+4*this.size,this.y+1.2*this.size);
-    ctx.lineTo(this.x+4.4*this.size,this.y-0.3*this.size);
-    ctx.lineTo(this.x+5.7*this.size,this.y-1*this.size);
-    ctx.lineTo(this.x+6.3*this.size,this.y-3.5*this.size);
-    ctx.lineTo(this.x+5*this.size,this.y-5*this.size);
-    ctx.lineTo(this.x+3*this.size,this.y-6*this.size);
-    ctx.lineTo(this.x+2*this.size,this.y-4.5*this.size);
-    ctx.lineTo(this.x+0.5*this.size,this.y-5*this.size);
-    ctx.lineTo(this.x-0.5*this.size,this.y-3.7*this.size);
-    ctx.lineTo(this.x+0.3*this.size,this.y-2.5*this.size);
-    ctx.lineTo(this.x-0.8*this.size,this.y-1.7*this.size);
-    ctx.lineTo(this.x,this.y);
+
+function Skip(speed,size,color) {
+    this.x = canvas.width / 2;
+    this.y = canvas.height / 2;
+    this.speed = speed;
+    this.angle = 90 / 180 * Math.PI;
+    this.radius = size / 2;
+    this.size = size;
+    this.rotation = 0;
+    this.color = color;
+    this.thrusting = false;
+    this.velocity = [0,0];
+}
+
+Skip.prototype.draw = function() {
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = this.size / 20;
+    ctx.beginPath();
+    ctx.moveTo(this.x + 4 / 3 * this.radius * Math.cos(this.angle),this.y - 4 / 3 * this.radius * Math.sin(this.angle));
+    ctx.lineTo(this.x - this.radius * (2 / 3 * Math.cos(this.angle) + Math.sin(this.angle)),this.y + this.radius * (2 / 3 * Math.sin(this.angle) - Math.cos(this.angle)));
+    ctx.lineTo(this.x - this.radius * (2 / 3 * Math.cos(this.angle) - Math.sin(this.angle)), this.y + this.radius * (2 / 3 * Math.sin(this.angle) + Math.cos(this.angle)));
+    ctx.closePath();
     ctx.stroke();
-    ctx.fill();
+    console.log(this.x - this.radius * (2 / 3 * Math.cos(this.angle) + Math.sin(this.angle)),this.y + this.radius * (2 / 3 * Math.sin(this.angle) - Math.cos(this.angle)));
+    console.log(this.x - this.radius * (2 / 3 * Math.cos(this.angle) - Math.sin(this.angle)), this.y + this.radius * (2 / 3 * Math.sin(this.angle) + Math.cos(this.angle)));
+    console.log(this.x + 4 / 3 * this.radius * Math.cos(this.angle),this.y - 4 / 3 * this.radius * Math.sin(this.angle));
 }
 
-function yes(){
-    yes = new Asteroid(640,360,5,5,"blue",20);
-    yes.draw();
-    yes1 = new Asteroid(100,100,5,5,"purple",12);
-    yes1.draw();
-    yes2 = new Asteroid(300,200,5,5,"gray",10);
-    yes2.draw();
+Skip.prototype.addRotation = function() {
+    this.angle += this.rotation;
 }
 
-/*for (let i = 100; i<=1060; i+=10)
-        {
-          ctx.fillStyle = 'rgb(200, 0, 0)';
-          ctx.fillRect(i,100+Math.cos(i*360)*30*Math.tan(i*360),Math.cos(i*360)*2*Math.tan(i*360),Math.cos(i*360)*-60*Math.tan(i*360));
-          ctx.lineTo(i,100+Math.cos(i*360)*Math.tan(i*360)*30);
-        }
-        ctx.stroke();
+function keyDown(e,skip = yes) {
+    switch(e.keyCode) {
+        case 37:
+            skip.rotation = 360 / 180 * Math.PI * FPS;
+            break;
+        case 39:
+            skip.rotation = -360 / 180 * Math.PI * FPS;
+            break;
+        case 38:
+            skip.thrusting = true;
+            break;
+    }
+}
 
-        ctx.moveTo(100,115);
-        for (let i = 100; i<=1060; i+=10) {
-          ctx.lineTo(i,100+Math.cos(i*360)*Math.tan(i*360)*-30);
-        }
-        ctx.stroke();*/
+function keyUp(e,skip = yes) {
+    switch(e.keyCode) {
+        case 37 || 65:
+            skip.rotation = 0;
+            break;
+        case 39 || 68:
+            skip.rotation = 0;
+            break;
+        case 38 || 87:
+            skip.thrusting = false;
+            break;
+    }
+}
+
+setInterval(update,1000 / FPS);
+
+function update(){
+  ctx.fillStyle = "black";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  yes.addRotation();
+  yes.draw();
+}
