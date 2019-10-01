@@ -1,8 +1,10 @@
 const FPS = 60;
+const FRICTION = 0.6;
+const MAX_SPEED = 20;
 
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
-let yes = new Skip(30,50,"lime");
+let yes = new Skip(20,50,"lime");
 
 document.addEventListener("keydown",keyDown);
 document.addEventListener("keyup",keyUp);
@@ -31,30 +33,55 @@ function Skip(speed,size,color) {
 }
 
 Skip.prototype.draw = function() {
+    this.angle += this.rotation;
     ctx.strokeStyle = this.color;
     ctx.lineWidth = this.size / 20;
     ctx.beginPath();
-    ctx.moveTo(this.x + 4 / 3 * this.radius * Math.cos(this.angle),this.y - 4 / 3 * this.radius * Math.sin(this.angle));
-    ctx.lineTo(this.x - this.radius * (2 / 3 * Math.cos(this.angle) + Math.sin(this.angle)),this.y + this.radius * (2 / 3 * Math.sin(this.angle) - Math.cos(this.angle)));
-    ctx.lineTo(this.x - this.radius * (2 / 3 * Math.cos(this.angle) - Math.sin(this.angle)), this.y + this.radius * (2 / 3 * Math.sin(this.angle) + Math.cos(this.angle)));
+    ctx.moveTo(
+    this.x + 4 / 3 * this.radius * Math.cos(this.angle),
+    this.y - 4 / 3 * this.radius * Math.sin(this.angle)
+    );
+    ctx.lineTo(
+    this.x - this.radius * (2 / 3 * Math.cos(this.angle) + Math.sin(this.angle)),
+    this.y + this.radius * (2 / 3 * Math.sin(this.angle) - Math.cos(this.angle))
+    );
+    ctx.lineTo(
+    this.x - this.radius * (2 / 3 * Math.cos(this.angle) - Math.sin(this.angle)),
+    this.y + this.radius * (2 / 3 * Math.sin(this.angle) + Math.cos(this.angle))
+    );
     ctx.closePath();
     ctx.stroke();
-    console.log(this.x - this.radius * (2 / 3 * Math.cos(this.angle) + Math.sin(this.angle)),this.y + this.radius * (2 / 3 * Math.sin(this.angle) - Math.cos(this.angle)));
-    console.log(this.x - this.radius * (2 / 3 * Math.cos(this.angle) - Math.sin(this.angle)), this.y + this.radius * (2 / 3 * Math.sin(this.angle) + Math.cos(this.angle)));
-    console.log(this.x + 4 / 3 * this.radius * Math.cos(this.angle),this.y - 4 / 3 * this.radius * Math.sin(this.angle));
 }
 
-Skip.prototype.addRotation = function() {
-    this.angle += this.rotation;
+Skip.prototype.fly = function() {
+    if (this.thrusting && this.velocity[0] <= MAX_SPEED && this.velocity[0] >= -MAX_SPEED && this.velocity[1] <= MAX_SPEED && this.velocity[1] >= -MAX_SPEED){
+        this.velocity[0] += this.speed * Math.cos(this.angle) / FPS;
+        this.velocity[1] -= this.speed * Math.sin(this.angle) / FPS;
+    } else {
+        this.velocity[0] -= FRICTION * this.velocity[0] / FPS;
+        this.velocity[1] -= FRICTION * this.velocity[1] / FPS;
+    }
+    this.x += this.velocity[0];
+    this.y += this.velocity[1];
+    if (this.x < 0 - this.radius) {
+        this.x = canvas.width + this.radius;
+    } else if (this.x > canvas.width + this.radius) {
+        this.x = 0 - this.radius;
+    }
+    if (this.y < 0 - this.radius) {
+        this.y = canvas.height + this.radius;
+    } else if (this.y > canvas.height + this.radius) {
+        this.y = 0 - this.radius;
+    }
 }
 
 function keyDown(e,skip = yes) {
     switch(e.keyCode) {
         case 37:
-            skip.rotation = 360 / 180 * Math.PI * FPS;
+            skip.rotation = 360 / 180 * Math.PI / FPS;
             break;
         case 39:
-            skip.rotation = -360 / 180 * Math.PI * FPS;
+            skip.rotation = -360 / 180 * Math.PI / FPS;
             break;
         case 38:
             skip.thrusting = true;
@@ -81,6 +108,7 @@ setInterval(update,1000 / FPS);
 function update(){
   ctx.fillStyle = "black";
   ctx.fillRect(0,0,canvas.width,canvas.height);
-  yes.addRotation();
+  yes.fly();
   yes.draw();
+  console.log(yes.velocity);
 }
