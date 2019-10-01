@@ -1,21 +1,50 @@
 const FPS = 60;
-const FRICTION = 0.6;
-const MAX_SPEED = 20;
+const FRICTION = 0.8;
+const MAX_SPEED = 15;
+const ROID_COLORS = ["white","lightgray","darkred","red"];
 
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
-let yes = new Skip(20,50,"lime");
+const yes = new Skip(20,50,"lime");
 
 document.addEventListener("keydown",keyDown);
 document.addEventListener("keyup",keyUp);
 
-function Asteroid(x,y,velX,velY,color,size) {
+function Asteroid(x,y,speed,color,size) {
     this.x = x;
     this.y = y;
-    this.velX = velX;
-    this.velY = velY;
+    this.velX = Math.random() * speed / FPS * (Math.random() < 0.5 ? 1 : -1);
+    this.velY = Math.random() * speed / FPS * (Math.random() < 0.5 ? 1 : -1);
     this.color = color;
-    this.size = size;
+    this.radius = size;
+    this.angle = Math.random() * Math.PI * 2;
+}
+
+Asteroid.prototype.draw = function() {
+    break;
+}
+
+function Belt(size) {
+    this.level = 0;
+    this.belt = [];
+    this.roidNum = size;
+    this.roidsLeft = this.roidNum;
+}
+
+Belt.prototype.create = function() {
+    let x,y;
+    let roidSize = Math.ceil(Math.random()*50);
+    for (let i = 0; i < this.roidNum + this.level; i++) {
+        while (distBetweenPoints(yes.x,yes.y,x,y) < roidSize * 2 + yes.radius) {
+            x = Math.floor(Math.random() * canvas.width);
+            y = Math.floor(Math.random() * canvas.height);
+        }
+        this.belt.push(new Asteroid(x,y,MAX_SPEED,ROID_COLORS[Math.floor(Math.random()*ROID_COLORS.length)],Math.ceil(roidSize / 2)));
+    }
+}
+
+Belt.prototype.drawAsteroids = function() {
+    break;
 }
 
 
@@ -77,30 +106,34 @@ Skip.prototype.fly = function() {
 
 function keyDown(e,skip = yes) {
     switch(e.keyCode) {
-        case 37:
-            skip.rotation = 360 / 180 * Math.PI / FPS;
+        case 65:
+            yes.rotation = 360 / 180 * Math.PI / FPS;
             break;
-        case 39:
-            skip.rotation = -360 / 180 * Math.PI / FPS;
+        case 68:
+            yes.rotation = -360 / 180 * Math.PI / FPS;
             break;
-        case 38:
-            skip.thrusting = true;
+        case 87:
+            yes.thrusting = true;
             break;
     }
 }
 
-function keyUp(e,skip = yes) {
+function keyUp(e) {
     switch(e.keyCode) {
-        case 37 || 65:
-            skip.rotation = 0;
+        case 65:
+            yes.rotation = 0;
             break;
-        case 39 || 68:
-            skip.rotation = 0;
+        case 68:
+            yes.rotation = 0;
             break;
-        case 38 || 87:
-            skip.thrusting = false;
+        case 87:
+            yes.thrusting = false;
             break;
     }
+}
+
+function distBetweenPoints(x1,y1,x2,y2) {
+    return Math.sqrt(Math.pow(x2 - x1,2) + Math.pow(y2 - y1,2));
 }
 
 setInterval(update,1000 / FPS);
