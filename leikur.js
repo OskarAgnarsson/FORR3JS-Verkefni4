@@ -1,7 +1,11 @@
+const SHOW_BOUNDING = false;
+
 const FPS = 60;
 const FRICTION = 0.8;
 const MAX_SPEED = 15;
-const ROID_COLORS = ["white","lightgray","darkred","red"];
+const ROID_COLORS = ["crimson","maroon","darkred","red"];
+const ROID_VERT = 10;
+const ROID_JAG = 0.4;
 
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
@@ -18,10 +22,35 @@ function Asteroid(x,y,speed,color,size) {
     this.color = color;
     this.radius = size;
     this.angle = Math.random() * Math.PI * 2;
+    this.vert = Math.floor(Math.random() * (ROID_VERT + 1) + ROID_VERT / 2);
+    this.offs = [];
+    
+    for (let i = 0; i < this.vert; i++) {
+        this.offs.push(Math.random() * ROID_JAG * 2 + 1 - ROID_JAG);
+    }
 }
 
 Asteroid.prototype.draw = function() {
-    break;
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = this.size / 10;
+    ctx.beginPath();
+    ctx.moveTo(this.x + this.radius * this.offs[0] * Math.cos(this.angle), this.y + this.radius * this.offs[0] * Math.sin(this.angle));
+    for (let i = 1; i < this.vert; i++) {
+        ctx.lineTo(
+            this.x + this.radius * this.offs[i] * Math.cos(this.angle + i * Math.PI * 2 / this.vert),
+            this.y + this.radius * this.offs[i] * Math.sin(this.angle + i * Math.PI * 2 / this.vert)
+        );
+    }
+    ctx.closePath();
+    ctx.stroke();
+
+    if (SHOW_BOUNDING) {
+        ctx.strokeStyle = "lime";
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,this.radius,0,Math.PI * 2, false);
+        ctx.stroke();
+    }
+
 }
 
 function Belt(size) {
@@ -33,8 +62,11 @@ function Belt(size) {
 
 Belt.prototype.create = function() {
     let x,y;
-    let roidSize = Math.ceil(Math.random()*50);
+    let roidSize;
     for (let i = 0; i < this.roidNum + this.level; i++) {
+        x = Math.floor(Math.random() * canvas.width);
+        y = Math.floor(Math.random() * canvas.height);
+        roidSize = Math.ceil(Math.random() * (100 - 50) + 50);
         while (distBetweenPoints(yes.x,yes.y,x,y) < roidSize * 2 + yes.radius) {
             x = Math.floor(Math.random() * canvas.width);
             y = Math.floor(Math.random() * canvas.height);
@@ -44,7 +76,9 @@ Belt.prototype.create = function() {
 }
 
 Belt.prototype.drawAsteroids = function() {
-    break;
+    for (let i = 0; i < this.belt.length; i++) {
+        this.belt[i].draw();
+    }
 }
 
 
@@ -138,10 +172,14 @@ function distBetweenPoints(x1,y1,x2,y2) {
 
 setInterval(update,1000 / FPS);
 
+let no = new Belt(5);
+
+no.create();
+console.log(no.belt[0]);
 function update(){
   ctx.fillStyle = "black";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillRect(0,0,canvas.width,canvas.height);//remember to draw stars you idiot
+  no.drawAsteroids();
   yes.fly();
   yes.draw();
-  console.log(yes.velocity);
 }
