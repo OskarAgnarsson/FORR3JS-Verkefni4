@@ -21,6 +21,7 @@ function Asteroid(x,y,speed,color,size) {
     this.velY = Math.random() * speed / FPS * (Math.random() < 0.5 ? 1 : -1);
     this.color = color;
     this.radius = size;
+    this.ogRadius = this.radius;
     this.angle = Math.random() * Math.PI * 2;
     this.vert = Math.floor(Math.random() * (ROID_VERT + 1) + ROID_VERT / 2);
     this.offs = [];
@@ -50,7 +51,22 @@ Asteroid.prototype.draw = function() {
         ctx.arc(this.x,this.y,this.radius,0,Math.PI * 2, false);
         ctx.stroke();
     }
+}
 
+Asteroid.prototype.move = function() {
+    this.x += this.velX;
+    this.y += this.velY;
+
+    if (this.x < 0 - this.radius) {
+        this.x = canvas.width + this.radius;
+    } else if (this.x > canvas.width + this.radius) {
+        this.x = 0 - this.radius;
+    }
+    if (this.y < 0 - this.radius) {
+        this.y = canvas.height + this.radius;
+    } else if (this.y > canvas.height + this.radius) {
+        this.y = 0 - this.radius;
+    }
 }
 
 function Belt(size) {
@@ -81,6 +97,11 @@ Belt.prototype.drawAsteroids = function() {
     }
 }
 
+Belt.prototype.moveAsteroids = function() {
+    for (let i = 0; i < this.belt.length; i++) {
+        this.belt[i].move();
+    }
+}
 
 function Skip(speed,size,color) {
     this.x = canvas.width / 2;
@@ -172,13 +193,14 @@ function distBetweenPoints(x1,y1,x2,y2) {
 
 setInterval(update,1000 / FPS);
 
-let no = new Belt(5);
+let no = new Belt(10);
 
 no.create();
 console.log(no.belt[0]);
 function update(){
   ctx.fillStyle = "black";
   ctx.fillRect(0,0,canvas.width,canvas.height);//remember to draw stars you idiot
+  no.moveAsteroids();
   no.drawAsteroids();
   yes.fly();
   yes.draw();
